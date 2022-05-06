@@ -1,0 +1,13 @@
+export default {
+  /**
+   * Port used by the ZipDown web server.
+   * @type {number}
+   */
+  "port": 8080,
+
+  /**
+   * Root directory accessible by ZipDown users.
+   * @type {string}
+   */
+  "rootDirectory": "./files"
+}

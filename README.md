@@ -2,9 +2,12 @@
 
 ## Overview
 
-ZipDown is a simple Node.js API which allows to easily download zip archives
-of directories and files from a configured path. It makes use of the
+ZipDown is a very simple Node.js tool which allows to easily download zip
+archives of directories and files from a configured path. It makes use of the
 [archiver](https://www.npmjs.com/package/archiver) node module to do that.
+
+The initial goal was to quickly allows easy file transfering between devices
+through HTTP of files and directories.
 
 ## API
 
@@ -13,22 +16,28 @@ It has 3 routes:
   - ``GET /``: Returns an html page which links the files and directories names
     to the corresponding ``GET /zip`` API call.
 
+    In most cases, this is the only route you will need to request.
+
   - ``GET /list``: Returns a JSON array listing the name of all the files and
     directories in the configured path.
+
+    This route is more adapted for programatically getting the list of available
+    files and directory (where `/` is meant to be used from a browser).
 
   - ``GET /zip/FILE_NAME``: Where ``FILE_NAME`` is the name of a file/directory.
 
     zip on-the-fly and download the given file/directory if it is found in the
     configured path.
 
-It can return the following http codes:
+This tool can return the following http codes:
 
-| HTTP code | Meaning                          |
-|-----------|----------------------------------|
-| 200       | The API call worked              |
-| 404       | The url asked for does not exist |
-| 405       | The method is not supported      |
-| 500       | A filesystem error happened      |
+| HTTP code | Meaning                            |
+|-----------|------------------------------------|
+| 200       | The API call worked                |
+| 404       | The route asked for does not exist |
+| 405       | The method is not supported        |
+| 500       | A filesystem error happened        |
+
 
 ## Starting the server
 
@@ -40,14 +49,15 @@ You can then clone this repo and install the dependencies:
 ```sh
 git clone git@github.com:peaBerberian/zipdown.js.git
 cd zipdown.js
-npm install --only=prod
+npm install --only=prod # install only non-dev dependencies
 ```
 
 You will need to set a config for the server, this is done through a
-``config.json`` file that you will have to create.
-A config example is available in ``./config.json.example`` .
+``config.mjs`` JavaScript file that you will have to create.
 
-Basically it is a JSON taking two properties:
+A commented config example is available in ``./config.mjs.example`` .
+
+Basically it is a JSON taking the following properties:
   - `port`: The server port, as a number
   - `rootDirectory`: The directory the list from the APIs are based on.
 
@@ -59,6 +69,6 @@ npm run start
 ## TODO
 
 The API already works but there is some improvements I might do in the future:
-  - HTTPs support
+  - HTTPS support
   - Listing by modification date in ``/list`` and ``/`` API
   - CSS for ``/`` API

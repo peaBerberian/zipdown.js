@@ -1,8 +1,8 @@
-const http = require('http');
-const archiver = require('archiver');
-const fs = require('fs');
-const path = require('path');
-const config = require('./config.json');
+import http from 'http';
+import archiver from 'archiver';
+import fs from 'fs';
+import path from 'path';
+import config from './config.mjs';
 
 const PORT = config.port;
 const ROOT_DIR = config.rootDirectory;
@@ -12,7 +12,7 @@ const ROOT_DIR = config.rootDirectory;
  * @param {Object} request
  * @param {Object} response
  */
-const handle404Request = (request, response) => {
+const handle404Request = (_request, response) => {
   response.writeHead(404, { 'Content-Type': 'text/plain' });
   response.write('404 Not Found\n');
   response.end();
@@ -23,7 +23,7 @@ const handle404Request = (request, response) => {
  * @param {Object} request
  * @param {Object} response
  */
-const handleNotSupportedMethod = (request, response) => {
+const handleNotSupportedMethod = (_request, response) => {
   response.writeHead(405, { 'Content-Type': 'text/plain' });
   response.write('Method not supported\n');
   response.end();
@@ -53,8 +53,8 @@ const handleZipRequest = (request, response) => {
     const fileName = path.basename(request.url.substr(4, request.url.length));
     const pathName = `${ROOT_DIR}/${fileName}`;
 
-    fs.exists(pathName, (exists) => {
-      if (!exists) {
+    fs.stat(pathName, async (err, stats) => {
+      if (err) {
         handleError(new Error('The asked file does not exist'), response);
       } else {
         response.writeHead(200, {
@@ -63,10 +63,21 @@ const handleZipRequest = (request, response) => {
         });
 
         const zip = archiver('zip');
-
-        zip.pipe(response);
-        zip.file(pathName, { name: fileName })
-          .finalize();
+        try {
+          if (stats.isFile()) {
+            zip.pipe(response);
+            await zip.file(pathName, { name: fileName }).finalize();
+          } else if (stats.isDirectory()) {
+            zip.pipe(response);
+            await zip.directory(pathName, path.basename(pathName)).finalize();
+            console.warn("DONE");
+          } else {
+            throw new Error('The asked file is neither a file nor  directory');
+          }
+        } catch (err) {
+          console.warn("FAILED");
+          handleError(err, response);
+        }
       }
     });
   } catch (e) {
@@ -102,7 +113,7 @@ const readRootDirectory = () => {
  * @param {Object} request
  * @param {Object} response
  */
-const handleListRequest = (request, response) => {
+const handleListRequest = (_request, response) => {
   readRootDirectory().then((files) => {
     response.writeHead(200, {
       'Content-Type': 'application/json; charset=utf-8'
@@ -137,7 +148,7 @@ const constructHTMLList = (files) => {
  * @param {Object} request
  * @param {Object} response
  */
-const handleHTMLRequest = (request, response) => {
+const handleHTMLRequest = (_request, response) => {
   readRootDirectory().then((files) => {
     response.writeHead(200, {
       'Content-Type': 'text/html; charset=utf-8'
